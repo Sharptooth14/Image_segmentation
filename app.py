@@ -54,7 +54,7 @@ def identify_objects(object_images):
         descriptions.append(labels)  # Replace with label names 
 
     return descriptions
-#Object analysis
+#Image analysis
 def summarize_attributes(identified_objects):
     
     COCO_LABELS = {1: "person", 2: "bicycle", 3: "car", 4: "motorcycle", 5: "airplane",
