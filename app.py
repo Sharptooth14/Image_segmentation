@@ -7,7 +7,7 @@ import streamlit as st
 from torchvision.models.detection import maskrcnn_resnet50_fpn, fasterrcnn_resnet50_fpn
 from torchvision.transforms import functional as F
 
-# Function Definitions
+#Image segmentation
 def segment_image(image):
     model = maskrcnn_resnet50_fpn(pretrained=True)
     model.eval()
@@ -37,7 +37,7 @@ def extract_and_save_objects(segmented_images, original_image, master_id):
         object_images.append(os.path.join('extracted_objects', object_id))
 
     return object_images
-
+#Image detection
 def identify_objects(object_images):
     model = fasterrcnn_resnet50_fpn(pretrained=True)
     model.eval()
@@ -51,12 +51,12 @@ def identify_objects(object_images):
             output = model(image_tensor)
 
         labels = output[0]['labels'].cpu().numpy()
-        descriptions.append(labels)  # Replace with label names for better readability
+        descriptions.append(labels)  # Replace with label names 
 
     return descriptions
-
+#Object analysis
 def summarize_attributes(identified_objects):
-    # Replace with actual label mapping for descriptions
+    
     COCO_LABELS = {1: "person", 2: "bicycle", 3: "car", 4: "motorcycle", 5: "airplane",
                    6: "bus", 7: "train", 8: "truck", 9: "boat", 10: "traffic light", 
                    11: "fire hydrant", 12: "stop sign", 13: "parking meter", 14: "bench", 
@@ -72,35 +72,35 @@ def summarize_attributes(identified_objects):
         })
     return summaries
 
-# Streamlit App
+
 def main():
     st.title("Image Segmentation and Object Analysis")
 
     uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "png"])
 
     if uploaded_file is not None:
-        # Read and display the image
+
         image = cv2.imdecode(np.frombuffer(uploaded_file.read(), np.uint8), 1)
         st.image(image, caption='Uploaded Image', channels='BGR')
 
-        # Step 1: Segment the image
+        
         segmented_images = segment_image(image)
 
-        # Step 2: Extract and save objects
+        
         object_images = extract_and_save_objects(segmented_images, image, master_id=1)
 
-        # Step 3: Identify objects
+        
         identified_objects = identify_objects(object_images)
 
-        # Step 4: Summarize object attributes
+        
         summarized_attributes = summarize_attributes(identified_objects)
 
-        # Display the results
+
         st.subheader("Segmented Images and Their Descriptions")
         for obj_id, (seg_img, desc) in enumerate(zip(object_images, summarized_attributes)):
             st.image(seg_img, caption=f"Object ID: {desc['object_id']} - Description: {', '.join(desc['description'])}")
 
-        # Show the dataframe with summaries
+        #Display results
         st.subheader("Object Summaries")
         df = pd.DataFrame(summarized_attributes)
         st.dataframe(df)
