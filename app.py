@@ -2,10 +2,7 @@ import os
 import numpy as np
 import cv2
 import pandas as pd
-import numpy as np
 import torch
-import pytesseract
-import matplotlib.pyplot as plt
 import streamlit as st
 from torchvision.models.detection import maskrcnn_resnet50_fpn, fasterrcnn_resnet50_fpn
 from torchvision.transforms import functional as F
@@ -54,19 +51,11 @@ def identify_objects(object_images):
             output = model(image_tensor)
 
         labels = output[0]['labels'].cpu().numpy()
-        # Convert labels to a more readable format (e.g., COCO labels)
-        descriptions.append(labels)  # Replace this with your mapping of label IDs to names
+        descriptions.append(labels)  # Replace with label names for better readability
 
     return descriptions
 
-def extract_text_from_objects(object_images):
-    extracted_text = []
-    for img_path in object_images:
-        text = pytesseract.image_to_string(cv2.imread(img_path))
-        extracted_text.append(text)
-    return extracted_text
-
-def summarize_attributes(identified_objects, extracted_texts):
+def summarize_attributes(identified_objects):
     # Replace with actual label mapping for descriptions
     COCO_LABELS = {1: "person", 2: "bicycle", 3: "car", 4: "motorcycle", 5: "airplane",
                    6: "bus", 7: "train", 8: "truck", 9: "boat", 10: "traffic light", 
@@ -75,22 +64,13 @@ def summarize_attributes(identified_objects, extracted_texts):
                    20: "cow", 21: "elephant", 22: "bear", 23: "zebra", 24: "giraffe"}
 
     summaries = []
-    for obj, text in zip(identified_objects, extracted_texts):
+    for obj in identified_objects:
         description = [COCO_LABELS.get(label, "unknown") for label in obj]  # Map labels to names
-        summary = {
+        summaries.append({
             'object_id': obj,
-            'description': description,
-            'extracted_text': text
-        }
-        summaries.append(summary)
+            'description': description
+        })
     return summaries
-
-def map_data(summaries, master_id):
-    mapping = {
-        'master_id': master_id,
-        'objects': summaries
-    }
-    return mapping
 
 # Streamlit App
 def main():
@@ -112,20 +92,10 @@ def main():
         # Step 3: Identify objects
         identified_objects = identify_objects(object_images)
 
-        # Step 4: Extract text from objects
-        extracted_texts = extract_text_from_objects(object_images)
-
-        # Step 5: Summarize object attributes
-        summarized_attributes = summarize_attributes(identified_objects, extracted_texts)
-
-        # Step 6: Map data
-        mapping = map_data(summarized_attributes, master_id=1)
+        # Step 4: Summarize object attributes
+        summarized_attributes = summarize_attributes(identified_objects)
 
         # Display the results
-        st.write("Data Mapping:")
-        st.json(mapping)
-
-        # Step 7: Generate output for segmented images
         st.subheader("Segmented Images and Their Descriptions")
         for obj_id, (seg_img, desc) in enumerate(zip(object_images, summarized_attributes)):
             st.image(seg_img, caption=f"Object ID: {desc['object_id']} - Description: {', '.join(desc['description'])}")
