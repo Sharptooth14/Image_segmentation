@@ -1,0 +1,9 @@
+numpy
+opencv-python
+pandas
+torch 
+torchvision 
+torchaudio
+pytesseract
+matplotlib
+streamlit
